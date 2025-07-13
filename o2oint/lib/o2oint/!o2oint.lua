@@ -38,9 +38,25 @@ local DEFAULT_OBJ_LISTS = {
     OBJ_LIST_DEFAULT,
     OBJ_LIST_SURFACE,
     OBJ_LIST_POLELIKE,
-    OBJ_LIST_SPAWNER,
-    OBJ_LIST_UNIMPORTANT,
 }
+
+local function tblfind(t, value, equals)
+    for k, v in pairs(t) do
+        if (equals and equals(v, value)) or (not equals and v == value) then
+            return k
+        end
+    end
+    return nil
+end
+
+local function get_function_name(func)
+    for k, v in pairs(_G) do
+        if v == func then
+            return k
+        end
+    end
+    return tostring(func)
+end
 
 local function process_interactions(interactions, interactor, context)
     local check_hitbox_overlap, args
@@ -61,49 +77,50 @@ local function process_interactions(interactions, interactor, context)
 
     local interacted = {}
     local objLists = interactions.objectLists
-    for _, interaction in ipairs(interactions.interactions) do
-        local ignoreIntangible = interaction.ignoreIntangible
-        local behaviorIds = interaction.behaviorIds
-        local functions = interaction.functions
-        local interact = interaction.interact
+    local behaviorIds = interactions.behaviorIds
+    local functions = interactions.functions
+    for _, objList in ipairs(objLists) do
+        local obj = obj_get_first(objList)
+        while obj do
+            local interaction
 
-        for _, objList in ipairs(objLists) do
-            local obj = obj_get_first(objList)
-            while obj do
-
-                -- Check if the object is valid for interaction
-                if ignoreIntangible or obj_is_valid_for_interaction(obj) then
-
-                    -- Check the behavior id
-                    if behaviorIds[get_id_from_behavior(obj.behavior)] then
-                        goto process_interaction
-                    end
-
-                    -- Check the "obj is..." functions
-                    for _, func in ipairs(functions) do
-                        if func(obj) then
-                            goto process_interaction
-                        end
-                    end
-
-                    goto no_interaction
-
-                    ---------------------------------------------------
-
-                    ::process_interaction::
-
-                    if check_hitbox_overlap(obj, unpack(args)) then
-                        interacted[#interacted+1] = obj
-                        if interact(interactor, obj, context) then
-                            return interacted
-                        end
-                    end
-
-                    ::no_interaction::
-                end
-
-                obj = obj_get_next(obj)
+            -- Check hitbox overlap
+            if not check_hitbox_overlap(obj, unpack(args)) then
+                goto next_obj
             end
+
+            -- Check behavior id
+            interaction = behaviorIds[get_id_from_behavior(obj.behavior)]
+            if interaction then
+                goto process_interaction
+            end
+
+            -- Check "obj is..." functions
+            for _, func in ipairs(functions) do
+                if func.func(obj) then
+                    interaction = func
+                    goto process_interaction
+                end
+            end
+
+            -- No interaction found
+            goto next_obj
+
+            ::process_interaction::
+
+            -- Check if the object is valid for interaction
+            if interaction.ignoreIntangible or obj_is_valid_for_interaction(obj) then
+
+                -- Process interaction, stop if it returns true
+                interacted[#interacted+1] = obj
+                if interaction.interact(interactor, obj, context) then
+                    return interacted
+                end
+            end
+
+            ::next_obj::
+
+            obj = obj_get_next(obj)
         end
     end
 
@@ -118,12 +135,14 @@ end
 --- Creates a new Interactions object
 local function new_interactions(interactions)
     local t = {
+        objectLists = {},
+        behaviorIds = {},
+        functions = {},
         process_interactions = process_interactions,
     }
 
     -- Object lists
     if type(interactions.objectLists) == "table" then
-        t.objectLists = {}
 
         -- Discard keys, we don't need those
         for _, objList in pairs(interactions.objectLists) do
@@ -134,46 +153,35 @@ local function new_interactions(interactions)
     end
 
     -- Interactions
-    t.interactions = {}
     if type(interactions.interactions) == "table" then
-
-        -- Discard keys, we don't need those
         for _, interaction in pairs(interactions.interactions) do
-            local int = {
-                behaviorIds = {},
-                functions = {},
-            }
 
-            -- Mandatory key: 'targets'
-            if not interaction.targets then
-                goto next_interaction
-            end
-            local targets = type(interaction.targets) == "table" and interaction.targets or {interaction.targets}
-            for _, target in pairs(targets) do
+            -- Mandatory keys: 'targets' and 'interact'
+            if interaction.targets and type(interaction.interact) == "function" then
+                local targets = type(interaction.targets) == "table" and interaction.targets or {interaction.targets}
+                for _, target in pairs(targets) do
 
-                -- Allowed types for target: number (behavior id), function
-                if type(target) == "number" then
-                    int.behaviorIds[target] = true
-                elseif type(target) == "function" then
-                    table.insert(int.functions, target)
+                    -- Allowed types for target: number (behavior id), function
+                    if type(target) == "number" then
+                        if t.behaviorIds[target] then
+                            error("An interaction is already defined for behavior: " .. get_behavior_name_from_id(target))
+                        end
+                        t.behaviorIds[target] = {
+                            interact = interaction.interact,
+                            ignoreIntangible = interaction.ignoreIntangible
+                        }
+                    elseif type(target) == "function" then
+                        if tblfind(t.functions, target, function (l, r) return l.func == r end) then
+                            error("An interaction is already defined for function: " .. get_function_name(target))
+                        end
+                        table.insert(t.functions, {
+                            func = target,
+                            interact = interaction.interact,
+                            ignoreIntangible = interaction.ignoreIntangible
+                        })
+                    end
                 end
             end
-            if #int.behaviorIds == 0 and #int.functions == 0 then
-                goto next_interaction
-            end
-
-            -- Mandatory key: 'interact'
-            if type(interaction.interact) ~= "function" then
-                goto next_interaction
-            end
-            int.interact = interaction.interact
-
-            -- Optional key: 'ignoreIntangible'
-            int.ignoreIntangible = interaction.ignoreIntangible
-
-            table.insert(t.interactions, int)
-
-            ::next_interaction::
         end
     end
 

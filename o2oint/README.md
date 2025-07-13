@@ -28,7 +28,7 @@ It's a table with the following structure:
 local interactionsTable = {
 
     -- The different object lists the interactions will be performed on.
-    -- If this field is not provided, it will use all objects lists by default.
+    -- If this field is not provided, it will use all (but spawner and unimportant) objects lists by default.
     -- More info about object lists here:
     --   https://github.com/coop-deluxe/sm64coopdx/blob/main/src/game/object_list_processor.h#L32
     objectLists = {
@@ -41,7 +41,6 @@ local interactionsTable = {
     },
 
     -- The list of user-defined interactions.
-    -- They are processed in the order they are defined.
     interactions = {
 
         -- Each interaction is a table with the following fields:
@@ -113,6 +112,86 @@ Its signature is the following:<br>
 In code, it is used like this:
 ```lua
 local interactedObjects = interactions:process_interactions(interactor, context)
+```
+
+<br>
+
+## Caveats
+
+- Each behavior id and function can be used only once as `targets`.<br>The following example is therefore impossible, and the library will throw an error during the creation of the `Interactions` object:
+```lua
+local interactionsTable = {
+    interactions = {
+        {
+            targets = {
+                id_bhvYellowCoin,
+                obj_is_coin,
+            },
+            interact = interact_func_1,
+        },
+        {
+            targets = id_bhvYellowCoin, -- id_bhvYellowCoin is already assigned to interact_func_1.
+            interact = interact_func_2,
+        },
+        {
+            targets = obj_is_coin, -- obj_is_coin is already assigned to interact_func_1.
+            interact = interact_func_3,
+        }
+    }
+}
+```
+- Objects lists in `objectLists` are processed in the order they are defined, not the order the game normally processes them.<br>In the following example, objects from lists `OBJ_LIST_DEFAULT`, `OBJ_LIST_LEVEL` and `OBJ_LIST_PLAYER` will be processed in that order:
+```lua
+local interactionsTable = {
+    objectLists = {
+        OBJ_LIST_DEFAULT,
+        OBJ_LIST_LEVEL,
+        OBJ_LIST_PLAYER,
+    },
+    interactions = {
+        ...
+    }
+}
+```
+- Interactions in `interactions` are processed in the order they are defined, **except for behavior ids `targets`, which are always processed first**.<br>In the following example, the library will check if the currently processed object has the behavior id `id_bhvYellowCoin` first, even though it is defined in a second interaction:
+```lua
+local interactionsTable = {
+    interactions = {
+        {
+            targets = obj_is_coin,
+            interact = interact_func_1,
+        },
+        {
+            -- If the currently processed object has the behavior id id_bhvYellowCoin,
+            -- interact_func_2 will be called, even if obj_is_coin would have returned true.
+            targets = id_bhvYellowCoin,
+            interact = interact_func_2,
+        }
+    }
+}
+```
+- Only one `interact` function is called per object, no matter the return value.<br>In the following example, only `interact_func_1` is called:
+```lua
+-- object's behavior is bhvYellowCoin
+
+local interactionsTable = {
+    interactions = {
+        -- Interaction 1 is more generic, but since bhvYellowCoin is a valid target,
+        -- interact_func_1 is called.
+        {
+            targets = function (obj)
+                return get_object_list_from_behavior(obj.behavior) == OBJ_LIST_LEVEL
+            end,
+            interact = interact_func_1,
+        },
+        -- Interaction 2 is more specific to coins, but since interact_func_1 was already called,
+        -- interact_func_2 is skipped.
+        {
+            targets = obj_is_coin,
+            interact = interact_func_2,
+        }
+    }
+}
 ```
 
 <br>
