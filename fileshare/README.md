@@ -169,6 +169,6 @@ fileshare.config.set("MAX_FILE_SIZE", 2000000)
 
 ## Example
 
-[Airdrop](https://github.com/PeachyPeachSM64/coopdx-libs/tree/master/fileshare/example/airdrop)
+[Airdrop](https://github.com/PeachyPeachSM64/coopdx-libs/tree/master/fileshare/example)
 
 https://github.com/user-attachments/assets/d0284db1-1fb3-40c9-8eb8-574b2b14f95a
