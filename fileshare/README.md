@@ -6,8 +6,7 @@
 > [!IMPORTANT]
 > This library is using the hook `HOOK_ON_PACKET_BYTESTRING_RECEIVE`!<br>
 > Packets starting with magic `PACKET_MAGIC` (4 bytes, `"<I4"`) are handled by this library and should be ignored by other hooks.<br>
-
-Example code:
+> Example code:
 ```lua
 local function on_packet_bytestring_receive(packet)
     if string.unpack("<I4", packet) == fileshare.PACKET_MAGIC then
