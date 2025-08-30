@@ -4,9 +4,9 @@
 **sm64coopdx v1.4.0 or later is required.**
 
 > [!IMPORTANT]
+> This library is using the hook `HOOK_ON_PACKET_BYTESTRING_RECEIVE`!<br>
+> Packets starting with magic `PACKET_MAGIC` (4 bytes, `"<I4"`) are handled by this library and should be ignored by other hooks.<br>
 
-This library is using the hook `HOOK_ON_PACKET_BYTESTRING_RECEIVE`!<br>
-Packets starting with magic `PACKET_MAGIC` (4 bytes, `"<I4"`) are handled by this library and should be ignored by other hooks.<br>
 Example code:
 ```lua
 local function on_packet_bytestring_receive(packet)
