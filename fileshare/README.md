@@ -79,8 +79,18 @@ fileshare.send(toLocalIndex, modPath, filename)
 Receives files.
 
 Returns:
-- `list<File>` - Successfully received files. Each file has the following fields: `modPath: string`, `filename: string`, `size: integer`, `data: table`.
-- `list<File>` - Pending files which are being downloaded. Each pending file has the following fields: `modPath: string`, `filename: string`, `size: integer`, `completion: number`.
+- `list<File>` - Successfully received files. Each file has the following fields:
+  - `sender`: `integer` - Global index of the player who sent the file.
+  - `modPath`: `string` - Name of the ModFS.
+  - `filename`: `string` - Name of the file received.
+  - `size`: `integer` - Size of the file in bytes.
+  - `data`: `string` - File data.
+- `list<File>` - Pending files which are being downloaded. Each pending file has the following fields:
+  - `sender`: `integer` - Global index of the player who sent the file.
+  - `modPath`: `string` - Name of the ModFS.
+  - `filename`: `string` - Name of the file received.
+  - `size`: `integer` - Size of the file in bytes.
+  - `completion`: `number` - Percentage of data already received. Ranges from `0` (included) to `1` (excluded, completed files are in the first list).
 
 ```lua
 -- Receive files during a HOOK_UPDATE

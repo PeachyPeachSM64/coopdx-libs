@@ -229,6 +229,7 @@ function PendingFile.get_data(pending)
 end
 
 --- @class File
+--- @field sender integer
 --- @field modPath string
 --- @field filename string
 --- @field size number
@@ -236,14 +237,16 @@ end
 --- @field data string|nil
 local File = {}
 
+--- @param sender integer
 --- @param modPath string
 --- @param filename string
 --- @param size number
 --- @param completion number|nil
 --- @param data string|nil
 --- @return File
-function File.new(modPath, filename, size, completion, data)
+function File.new(sender, modPath, filename, size, completion, data)
     return {
+        sender = sender,
         modPath = modPath,
         filename = filename,
         size = size,
@@ -498,8 +501,8 @@ end
 
 --- @return table<integer, File>, table<integer, File>
 --- Receives files. Returns two lists:
---- - Successfully received files. Each file has the following fields: `modPath: string`, `filename: string`, `size: integer`, `data: table`.
---- - Pending files which are being downloaded. Each pending file has the following fields: `modPath: string`, `filename: string`, `size: integer`, `completion: number`.
+--- - Successfully received files. Each file has the following fields: `sender: integer`, `modPath: string`, `filename: string`, `size: integer`, `data: string`.
+--- - Pending files which are being downloaded. Each pending file has the following fields: `sender: integer`, `modPath: string`, `filename: string`, `size: integer`, `completion: number`.
 local function receive()
     local receivedFiles = {}
     local pendingFiles = {}
@@ -508,6 +511,7 @@ local function receive()
     for fullname, pending in pairs(sPendingFiles) do
         if pending.state == FILE_STATE_COMPLETED then
             receivedFiles[#receivedFiles+1] = File.new(
+                pending.sender,
                 pending.modPath,
                 pending.filename,
                 pending.size,
@@ -517,6 +521,7 @@ local function receive()
             completed[#completed+1] = fullname
         elseif pending.state == FILE_STATE_PENDING then
             pendingFiles[#pendingFiles+1] = File.new(
+                pending.sender,
                 pending.modPath,
                 pending.filename,
                 pending.size,
