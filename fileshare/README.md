@@ -202,4 +202,4 @@ https://github.com/user-attachments/assets/d0284db1-1fb3-40c9-8eb8-574b2b14f95a
 
 [Character Select with ModFS](https://github.com/PeachyPeachSM64/coopdx-libs/tree/master/fileshare/example/cs-modfs)
 
-TODO: video
+https://github.com/user-attachments/assets/f555909f-57a5-48c9-b947-35abd732ca9f
