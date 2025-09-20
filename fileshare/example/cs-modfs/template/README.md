@@ -54,56 +54,61 @@ character-name/
 
 Here is a complete view of the template file:
 
+> The character information.<br>
+> The following fields are the same as the ones passed to [`charSelect.character_add`](https://github.com/Squishy6094/character-select-coop/wiki/API-Documentation#character_add).
 ```json
-{
-    // The character information.
-    // The following fields are the same as the ones passed to `charSelect.character_add`.
-    // https://github.com/Squishy6094/character-select-coop/wiki/API-Documentation#character_add
-    "name": "Character name",
-    "description": "Character description",
-    "credit": "Made by this character's author",
-    "color": {"r": 255, "g": 255, "b": 255},
-    "baseChar": "CT_MARIO",
-    "camScale": 1.0,
+"name": "Character name",
+"description": "Character description",
+"credit": "Made by this character's author",
+"color": {"r": 255, "g": 255, "b": 255},
+"baseChar": "CT_MARIO",
+"camScale": 1.0,
+```
 
-    // The base model of the character.
-    // Must be a filepath to the `.bin` geo file.
-    "model": "actors/character_geo.bin",
+> The base model of the character.<br>
+> Must be a filepath to the `.bin` geo file.
+```json
+"model": "actors/character_geo.bin",
+```
 
-    // The character icon.
-    // Must be a filepath to the `.tex` texture file.
-    "icon": "textures/character-icon.tex",
+> The character icon.<br>
+> Must be a filepath to the `.tex` texture file.
+```json
+"icon": "textures/character-icon.tex",
+```
 
-    // The character's palette.
-    // Each color is a string representing an RRGGBB hex color, for example: "FF0000" (red).
-    "palette": {
-        "PANTS": "RRGGBB hex color",
-        "SHIRT": "RRGGBB hex color",
-        "GLOVES": "RRGGBB hex color",
-        "SHOES": "RRGGBB hex color",
-        "HAIR": "RRGGBB hex color",
-        "SKIN": "RRGGBB hex color",
-        "CAP": "RRGGBB hex color"
-    },
+> The character's palette.<br>
+> Each color is a string representing an RRGGBB hex color, for example: `"FF0000"` (red).
+```json
+"palette": {
+    "PANTS": "RRGGBB",
+    "SHIRT": "RRGGBB",
+    "GLOVES": "RRGGBB",
+    "SHOES": "RRGGBB",
+    "HAIR": "RRGGBB",
+    "SKIN": "RRGGBB",
+    "CAP": "RRGGBB"
+},
+```
 
-    // The character's caps models.
-    // Each entry must be a filepath to the corresponding `.bin` geo file.
-    "caps": {
-        "normal": "actors/character_cap_geo.bin",
-        "wing": "actors/character_wing_cap_geo.bin",
-        "metal": "actors/character_metal_cap_geo.bin",
-        "metalWing": "actors/character_winged_metal_cap_geo.bin"
-    },
+> The character's caps models.<br>
+> Each entry must be a filepath to the corresponding `.bin` geo file.
+```json
+"caps": {
+    "normal": "actors/character_cap_geo.bin",
+    "wing": "actors/character_wing_cap_geo.bin",
+    "metal": "actors/character_metal_cap_geo.bin",
+    "metalWing": "actors/character_winged_metal_cap_geo.bin"
+},
+```
 
-    // The character's voice clips.
-    // Each character sound must be a filepath or an array of filepaths to audio files.
-    // The format is the same as the voice table passed to `charSelect.character_add_voice`.
-    // https://github.com/Squishy6094/character-select-coop/wiki/API-Documentation#character_add_voice
-    // All available character sounds are here:
-    // https://github.com/coop-deluxe/sm64coopdx/blob/main/docs/lua/constants.md#enum-CharacterSound
-    "voices": {
-        "CHAR_SOUND_NAME": "sound/char_sound_file.ogg"
-    }
+> The character's voice clips.<br>
+> Each character sound must be a filepath or an array of filepaths to audio files.<br>
+> The format is the same as the voice table passed to [`charSelect.character_add_voice`](https://github.com/Squishy6094/character-select-coop/wiki/API-Documentation#character_add_voice).<br>
+> Check all available character [sounds](https://github.com/coop-deluxe/sm64coopdx/blob/main/docs/lua/constants.md#enum-CharacterSound).
+```json
+"voices": {
+    "CHAR_SOUND_NAME": "sound/char_sound_file.ogg"
 }
 ```
 

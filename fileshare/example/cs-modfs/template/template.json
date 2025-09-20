@@ -8,13 +8,13 @@
     "model": "actors/character_geo.bin",
     "icon": "textures/character-icon.tex",
     "palette": {
-        "PANTS": "RRGGBB hex color",
-        "SHIRT": "RRGGBB hex color",
-        "GLOVES": "RRGGBB hex color",
-        "SHOES": "RRGGBB hex color",
-        "HAIR": "RRGGBB hex color",
-        "SKIN": "RRGGBB hex color",
-        "CAP": "RRGGBB hex color"
+        "PANTS": "RRGGBB",
+        "SHIRT": "RRGGBB",
+        "GLOVES": "RRGGBB",
+        "SHOES": "RRGGBB",
+        "HAIR": "RRGGBB",
+        "SKIN": "RRGGBB",
+        "CAP": "RRGGBB"
     },
     "caps": {
         "normal": "actors/character_cap_geo.bin",
