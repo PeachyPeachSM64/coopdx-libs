@@ -78,7 +78,7 @@ function read_json_file(modFs, filename)
         local file = modFs:get_file(filename)
         if file then
             file:set_text_mode(true)
-            file:seek(0, FILE_SEEK_SET)
+            file:rewind()
             local data = file:read_string()
             return json.decode(data)
         end

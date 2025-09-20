@@ -120,7 +120,7 @@ function load_character(charName)
             local filepath = character.modPath .. "/" .. filename
             local file = gModFs:get_file(filepath) or gModFs:create_file(filepath, false)
             file:set_text_mode(false)
-            file:seek(0, FILE_SEEK_SET)
+            file:rewind()
             file:erase(file.size)
             file:write_bytes(cfile.data)
         end
