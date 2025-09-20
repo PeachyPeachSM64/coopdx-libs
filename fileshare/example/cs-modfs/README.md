@@ -4,7 +4,7 @@ Allows you to load your own characters in Character Select and send them to othe
 
 ## Installation
 
-- Download this mod and put it in your mods directory.
+- Download this mod and put the `cs-modfs` directory in your mods directory.
 - Put the files `lugia.modfs` and `hooh.modfs` in your `%AppData%/sm64coopdx/sav` directory.
 
 ## Commands

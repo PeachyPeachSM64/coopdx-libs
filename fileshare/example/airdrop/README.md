@@ -5,7 +5,7 @@ Send a picture of a cat (or whatever is in your ModFS) to other people.
 
 ## Installation
 
-- Download this mod and put it in your mods directory.
+- Download this mod and put the `airdrop` directory in your mods directory.
 - Put the file `cat.modfs` in your `%AppData%/sm64coopdx/sav` directory.
 
 ## Commands
