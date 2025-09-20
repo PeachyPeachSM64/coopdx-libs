@@ -53,6 +53,21 @@ local fileshare = require("fileshare")
 
 <br>
 
+## `config` Constants
+
+- `config.MAX_FILE_SIZE`
+  - The string `"MAX_FILE_SIZE"`.
+- `config.MAX_REQUESTS_PER_FRAME`
+  - The string `"MAX_REQUESTS_PER_FRAME"`.
+- `config.TIMEOUT_FRAMES`
+  - The string `"TIMEOUT_FRAMES"`.
+- `config.MAX_RETRIES`
+  - The string `"MAX_RETRIES"`.
+- `config.VERBOSE`
+  - The string `"VERBOSE"`.
+
+<br>
+
 ## Functions
 
 ### `send (toLocalIndex, modPath, filename)`
@@ -137,7 +152,8 @@ end)
 
 ### `config.get (name)`
 
-Retrieves the value of the config `name`.
+Retrieves the value of the config `name`.<br>
+Can use `config` constants instead of plain strings.
 
 Params:
 - `name`: `string` - Name of the config. Allowed names are:
@@ -152,14 +168,15 @@ Returns:
 
 ```lua
 -- Retrieve current value of MAX_FILE_SIZE
-local maxFileSize = fileshare.config.get("MAX_FILE_SIZE")
+local maxFileSize = fileshare.config.get(fileshare.config.MAX_FILE_SIZE)
 ```
 
 <br>
 
 ### `config.set (name, value)`
 
-Sets the value for the config `name`.
+Sets the value for the config `name`.<br>
+Can use `config` constants instead of plain strings.
 
 Params:
 - `name`: `string` - Name of the config. Allowed names are:
@@ -172,13 +189,17 @@ Params:
 
 ```lua
 -- Set value of MAX_FILE_SIZE
-fileshare.config.set("MAX_FILE_SIZE", 2000000)
+fileshare.config.set(fileshare.config.MAX_FILE_SIZE, 2000000)
 ```
 
 <br>
 
-## Example
+## Examples
 
-[Airdrop](https://github.com/PeachyPeachSM64/coopdx-libs/tree/master/fileshare/example)
+[Airdrop](https://github.com/PeachyPeachSM64/coopdx-libs/tree/master/fileshare/example/airdrop)
 
 https://github.com/user-attachments/assets/d0284db1-1fb3-40c9-8eb8-574b2b14f95a
+
+[Character Select with ModFS](https://github.com/PeachyPeachSM64/coopdx-libs/tree/master/fileshare/example/cs-modfs)
+
+TODO: video

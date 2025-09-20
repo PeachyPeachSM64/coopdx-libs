@@ -1,0 +1,28 @@
+{
+    "name": "Character name",
+    "description": "Character description",
+    "credit": "Made by this character's author",
+    "color": {"r": 255, "g": 255, "b": 255},
+    "baseChar": "CT_MARIO",
+    "camScale": 1.0,
+    "model": "actors/character_geo.bin",
+    "icon": "textures/character-icon.tex",
+    "palette": {
+        "PANTS": "RRGGBB hex color",
+        "SHIRT": "RRGGBB hex color",
+        "GLOVES": "RRGGBB hex color",
+        "SHOES": "RRGGBB hex color",
+        "HAIR": "RRGGBB hex color",
+        "SKIN": "RRGGBB hex color",
+        "CAP": "RRGGBB hex color"
+    },
+    "caps": {
+        "normal": "actors/character_cap_geo.bin",
+        "wing": "actors/character_wing_cap_geo.bin",
+        "metal": "actors/character_metal_cap_geo.bin",
+        "metalWing": "actors/character_winged_metal_cap_geo.bin"
+    },
+    "voices": {
+        "CHAR_SOUND_NAME": "sound/char_sound_file.ogg"
+    }
+}
