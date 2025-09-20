@@ -7,7 +7,7 @@
     author: PeachyPeach
     required: sm64coopdx v1.4 or later
 
-    A small library to share modfs files over the network.
+    A small library to share ModFS files over the network.
 
     <!> Important note <!>
     This library is using HOOK_ON_PACKET_BYTESTRING_RECEIVE!
@@ -41,14 +41,14 @@ local VERBOSE                   = false
 -- config --
 ------------
 
---- @class Config
+--- @class FS_Config
 --- @field MAX_FILE_SIZE integer
 --- @field MAX_REQUESTS_PER_FRAME integer 
 --- @field TIMEOUT_FRAMES integer
 --- @field MAX_RETRIES integer
 --- @field VERBOSE boolean
 
---- @type Config
+--- @type FS_Config
 local sConfig = {
     MAX_FILE_SIZE = MAX_FILE_SIZE,
     MAX_REQUESTS_PER_FRAME = MAX_REQUESTS_PER_FRAME,
@@ -57,7 +57,7 @@ local sConfig = {
     VERBOSE = VERBOSE,
 }
 
---- @type Config
+--- @type FS_Config
 local sConfigDefault = {
     MAX_FILE_SIZE = MAX_FILE_SIZE,
     MAX_REQUESTS_PER_FRAME = MAX_REQUESTS_PER_FRAME,
@@ -127,18 +127,18 @@ end
 -- requests --
 --------------
 
---- @class Request
+--- @class FS_Request
 --- @field toLocalIndex integer
 --- @field packet string
-local Request = {}
+local FS_Request = {}
 
---- @type table<integer, Request>
+--- @type table<integer, FS_Request>
 local sRequests = {}
 
 --- @param toLocalIndex integer
 --- @param packet string
---- @return Request
-function Request.new(toLocalIndex, packet)
+--- @return FS_Request
+function FS_Request.new(toLocalIndex, packet)
     return {
         toLocalIndex = toLocalIndex,
         packet = packet,
@@ -167,7 +167,7 @@ hook_event(HOOK_UPDATE, handle_requests)
 -- files --
 -----------
 
---- @class PendingFile
+--- @class FS_PendingFile
 --- @field modPath string
 --- @field filename string
 --- @field size integer
@@ -178,9 +178,9 @@ hook_event(HOOK_UPDATE, handle_requests)
 --- @field lastTick integer
 --- @field retries integer
 --- @field state integer
-local PendingFile = {}
+local FS_PendingFile = {}
 
---- @type table<string, PendingFile>
+--- @type table<string, FS_PendingFile>
 local sPendingFiles = {}
 
 --- @param modPath string
@@ -189,8 +189,8 @@ local sPendingFiles = {}
 --- @param numParts integer
 --- @param sender integer
 --- @param timestamp integer
---- @return PendingFile
-function PendingFile.new(modPath, filename, size, numParts, sender, timestamp)
+--- @return FS_PendingFile
+function FS_PendingFile.new(modPath, filename, size, numParts, sender, timestamp)
     return {
         modPath = modPath,
         filename = filename,
@@ -203,14 +203,14 @@ function PendingFile.new(modPath, filename, size, numParts, sender, timestamp)
         retries = 0,
         state = FILE_STATE_PENDING,
 
-        get_completion = PendingFile.get_completion,
-        get_data = PendingFile.get_data,
+        get_completion = FS_PendingFile.get_completion,
+        get_data = FS_PendingFile.get_data,
     }
 end
 
---- @param pending PendingFile
+--- @param pending FS_PendingFile
 --- @return number
-function PendingFile.get_completion(pending)
+function FS_PendingFile.get_completion(pending)
     local completed = 0
     for _, part in pairs(pending.parts) do
         completed = completed + #part
@@ -218,9 +218,9 @@ function PendingFile.get_completion(pending)
     return completed / pending.size
 end
 
---- @param pending PendingFile
+--- @param pending FS_PendingFile
 --- @return string
-function PendingFile.get_data(pending)
+function FS_PendingFile.get_data(pending)
     local data = ''
     for _, part in ipairs(pending.parts) do
         data = data .. part
@@ -228,14 +228,14 @@ function PendingFile.get_data(pending)
     return data
 end
 
---- @class File
+--- @class FS_File
 --- @field sender integer
 --- @field modPath string
 --- @field filename string
 --- @field size number
 --- @field completion number|nil
 --- @field data string|nil
-local File = {}
+local FS_File = {}
 
 --- @param sender integer
 --- @param modPath string
@@ -243,8 +243,8 @@ local File = {}
 --- @param size number
 --- @param completion number|nil
 --- @param data string|nil
---- @return File
-function File.new(sender, modPath, filename, size, completion, data)
+--- @return FS_File
+function FS_File.new(sender, modPath, filename, size, completion, data)
     return {
         sender = sender,
         modPath = modPath,
@@ -259,26 +259,26 @@ end
 -- packet --
 ------------
 
---- @class Packet
+--- @class FS_Packet
 --- @field data string
 --- @field offset integer
-local Packet = {}
+local FS_Packet = {}
 
 --- @param packet string
---- @return Packet
-function Packet.new(packet)
+--- @return FS_Packet
+function FS_Packet.new(packet)
     return {
         data = packet,
         offset = 1,
 
-        unpack = Packet.unpack,
+        unpack = FS_Packet.unpack,
     }
 end
 
---- @param p Packet
+--- @param p FS_Packet
 --- @param fmt string
 --- @return any
-function Packet.unpack(p, fmt)
+function FS_Packet.unpack(p, fmt)
     local value
     value, p.offset = string.unpack(fmt, p.data, p.offset)
     return value
@@ -289,7 +289,7 @@ end
 ----------
 
 --- @param toLocalIndex integer Local index of the player to send the file to.
---- @param modPath string Name of the modfs file.
+--- @param modPath string Name of the ModFS file.
 --- @param filename string Name of the file to send.
 --- @param partIndex? integer Part index of the file to send. Optional. If not provided, sends the whole file.
 --- @param isRetry? boolean retry
@@ -307,7 +307,7 @@ local function send(toLocalIndex, modPath, filename, partIndex, isRetry)
         return false
     end
 
-    local file = mod_fs_get_file(modFs, filename)
+    local file = modFs:get_file(filename)
     if not file then
         log_error(string.format("send: File not found: %s/%s", modPath, filename))
         return false
@@ -324,12 +324,12 @@ local function send(toLocalIndex, modPath, filename, partIndex, isRetry)
     local minPart = partIndex and partIndex or 1
     local maxPart = partIndex and partIndex or numParts
 
-    mod_fs_file_set_text_mode(file, false)
-    mod_fs_file_seek(file, (minPart - 1) * MAX_FILE_PART_SIZE, FILE_SEEK_SET)
+    file:set_text_mode(false)
+    file:seek((minPart - 1) * MAX_FILE_PART_SIZE, FILE_SEEK_SET)
 
     for i = minPart, maxPart do
         local length = math.min(MAX_FILE_PART_SIZE, file.size - file.offset)
-        local bytes = mod_fs_file_read_bytes(file, length)
+        local bytes = file:read_bytes(length)
         local packet = ''
             .. string.pack("<I4", PACKET_MAGIC)
             .. string.pack("<B", isRetry and PACKET_TYPE_RETRY_FILE or PACKET_TYPE_SEND_FILE)
@@ -343,7 +343,7 @@ local function send(toLocalIndex, modPath, filename, partIndex, isRetry)
             .. string.pack("<H", length)
             .. bytes
 
-        sRequests[#sRequests+1] = Request.new(
+        sRequests[#sRequests+1] = FS_Request.new(
             toLocalIndex,
             packet
         )
@@ -353,7 +353,7 @@ local function send(toLocalIndex, modPath, filename, partIndex, isRetry)
     return true
 end
 
---- @param pending PendingFile
+--- @param pending FS_PendingFile
 --- @param parts table<integer, integer>
 local function send_retry(pending, parts)
     if pending.state == FILE_STATE_PENDING then
@@ -370,7 +370,7 @@ local function send_retry(pending, parts)
                     .. string.pack("<s", pending.filename)
                     .. string.pack("<H", partIndex)
 
-                sRequests[#sRequests+1] = Request.new(
+                sRequests[#sRequests+1] = FS_Request.new(
                     network_local_index_from_global(pending.sender),
                     packet
                 )
@@ -386,7 +386,7 @@ local function send_retry(pending, parts)
     end
 end
 
---- @param p Packet
+--- @param p FS_Packet
 local function retry_send_file(p)
     local timestamp = p:unpack("<I8")
     local sender    = p:unpack("<B")
@@ -401,7 +401,7 @@ end
 -- receive --
 -------------
 
---- @param p Packet
+--- @param p FS_Packet
 --- @param isRetry boolean
 local function receive_file_part(p, isRetry)
     local timestamp = p:unpack("<I8")
@@ -420,7 +420,7 @@ local function receive_file_part(p, isRetry)
             log_message(string.format("receive_file_part: File %s: File part ignored, because file is not in pending", fullname))
             return
         end
-        sPendingFiles[fullname] = PendingFile.new(
+        sPendingFiles[fullname] = FS_PendingFile.new(
             modPath,
             filename,
             size,
@@ -450,7 +450,7 @@ local function receive_file_part(p, isRetry)
         end
 
         -- Reset file
-        sPendingFiles[fullname] = PendingFile.new(
+        sPendingFiles[fullname] = FS_PendingFile.new(
             modPath,
             filename,
             size,
@@ -499,7 +499,7 @@ local function receive_file_part(p, isRetry)
     log_message(string.format("receive_file_part: File %s: Received file part %d of length %d", fullname, partIndex, length))
 end
 
---- @return table<integer, File>, table<integer, File>
+--- @return table<integer, FS_File>, table<integer, FS_File>
 --- Receives files. Returns two lists:
 --- - Successfully received files. Each file has the following fields: `sender: integer`, `modPath: string`, `filename: string`, `size: integer`, `data: string`.
 --- - Pending files which are being downloaded. Each pending file has the following fields: `sender: integer`, `modPath: string`, `filename: string`, `size: integer`, `completion: number`.
@@ -510,7 +510,7 @@ local function receive()
 
     for fullname, pending in pairs(sPendingFiles) do
         if pending.state == FILE_STATE_COMPLETED then
-            receivedFiles[#receivedFiles+1] = File.new(
+            receivedFiles[#receivedFiles+1] = FS_File.new(
                 pending.sender,
                 pending.modPath,
                 pending.filename,
@@ -520,7 +520,7 @@ local function receive()
             )
             completed[#completed+1] = fullname
         elseif pending.state == FILE_STATE_PENDING then
-            pendingFiles[#pendingFiles+1] = File.new(
+            pendingFiles[#pendingFiles+1] = FS_File.new(
                 pending.sender,
                 pending.modPath,
                 pending.filename,
@@ -569,10 +569,10 @@ hook_event(HOOK_UPDATE, update_receive)
 -- save --
 ----------
 
---- @param f File A file received from the `receive` function.
+--- @param f FS_File A file received from the `receive` function.
 --- @param destFilename? string An optional destination filename. If not provided, file will be saved to path `<f.modPath>/<f.filename>`.
 --- @return boolean
---- Saves file to modfs.
+--- Saves file to ModFS.
 local function save(f, destFilename)
     if not f.data then
         log_error("save: Cannot save an empty file")
@@ -586,22 +586,17 @@ local function save(f, destFilename)
     end
 
     destFilename = destFilename or string.format("%s/%s", f.modPath, f.filename)
-    if mod_fs_get_file(modFs, destFilename) then
-        mod_fs_delete_file(modFs, destFilename)
+    if modFs:get_file(destFilename) then
+        modFs:delete_file(destFilename)
     end
-    local file = mod_fs_create_file(modFs, destFilename, false)
+    local file = modFs:create_file(destFilename, false)
     if not file then
         log_error(string.format("save: Unable to create file: %s", destFilename))
         return false
     end
 
-    if not mod_fs_file_write_bytes(file, f.data) then
+    if not file:write_bytes(f.data) then
         log_error(string.format("save: Unable to write to file: %s", destFilename))
-        return false
-    end
-
-    if not mod_fs_save(modFs) then
-        log_error(string.format("save: Unable to save ModFS: %s", modFs.modPath))
         return false
     end
 
@@ -620,7 +615,7 @@ local sPacketTypes = {
 
 --- @param packet string
 local function on_packet_bytestring_receive(packet)
-    local p = Packet.new(packet)
+    local p = FS_Packet.new(packet)
 
     local magic = p:unpack("<I4")
     if magic ~= PACKET_MAGIC then
@@ -654,6 +649,11 @@ local _fileshare = {
     receive = function () return receive() end,
     save    = function (f, destFilename) return save(f, destFilename) end,
     config  = {
+        MAX_FILE_SIZE = "MAX_FILE_SIZE",
+        MAX_REQUESTS_PER_FRAME = "MAX_REQUESTS_PER_FRAME",
+        TIMEOUT_FRAMES = "TIMEOUT_FRAMES",
+        MAX_RETRIES = "MAX_RETRIES",
+        VERBOSE = "VERBOSE",
         get = function (name) return config_get(name) end,
         set = function (name, value) return config_set(name, value) end,
     }
@@ -662,6 +662,11 @@ local _fileshare = {
 --- @class config
 --- @field get fun(name: string): integer|boolean
 --- @field set fun(name: string, value: integer|boolean)
+--- @field MAX_FILE_SIZE string
+--- @field MAX_REQUESTS_PER_FRAME string
+--- @field TIMEOUT_FRAMES string
+--- @field MAX_RETRIES string
+--- @field VERBOSE string
 
 --- @class fileshare
 --- @field PACKET_MAGIC integer
@@ -671,8 +676,8 @@ local _fileshare = {
 --- @field MAX_RETRIES integer
 --- @field VERBOSE boolean
 --- @field send fun(toLocalIndex: integer, modPath: string, filename: string): boolean
---- @field receive fun(): table<integer, File>, table<integer, File>
---- @field save fun(f: File, destFilename?: string): boolean
+--- @field receive fun(): table<integer, FS_File>, table<integer, FS_File>
+--- @field save fun(f: FS_File, destFilename?: string): boolean
 --- @field config config
 local fileshare = setmetatable({}, {
     __index = _fileshare,

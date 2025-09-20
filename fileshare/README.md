@@ -128,6 +128,14 @@ end)
 
 Saves file `f` to ModFS at path `destFilename`.
 
+> [!IMPORTANT]
+> This function alone does not save the file into persistent storage.<br>
+> To physically save the files, one needs to call the `save` function from a ModFS object:
+```lua
+local modFs = mod_fs_get()
+modFs:save()
+```
+
 Params:
 - `f`: `File` - File received from the `receive` function.
 - `destFilename`: `string` [Optional] - Destination filename. If not provided, file will be saved to path `<f.modPath>/<f.filename>`.

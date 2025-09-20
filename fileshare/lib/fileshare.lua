@@ -600,11 +600,6 @@ local function save(f, destFilename)
         return false
     end
 
-    if not modFs:save() then
-        log_error(string.format("save: Unable to save ModFS: %s", modFs.modPath))
-        return false
-    end
-
     return true
 end
 

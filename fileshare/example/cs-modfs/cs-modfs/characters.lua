@@ -124,7 +124,6 @@ function load_character(charName)
             file:erase(file.size)
             file:write_bytes(cfile.data)
         end
-        gModFs:save()
 
         -- Load character data
         local jsonPath = character.modPath .. "/" .. character.jsonPath

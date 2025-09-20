@@ -67,6 +67,7 @@ hook_event(HOOK_UPDATE, function ()
             receivedFile.filename
         ))
         fileshare.save(receivedFile)
+        mod_fs_get():save()
     end
 end)
 

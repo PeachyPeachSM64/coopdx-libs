@@ -289,7 +289,7 @@ end
 ----------
 
 --- @param toLocalIndex integer Local index of the player to send the file to.
---- @param modPath string Name of the modfs file.
+--- @param modPath string Name of the ModFS file.
 --- @param filename string Name of the file to send.
 --- @param partIndex? integer Part index of the file to send. Optional. If not provided, sends the whole file.
 --- @param isRetry? boolean retry
@@ -572,7 +572,7 @@ hook_event(HOOK_UPDATE, update_receive)
 --- @param f FS_File A file received from the `receive` function.
 --- @param destFilename? string An optional destination filename. If not provided, file will be saved to path `<f.modPath>/<f.filename>`.
 --- @return boolean
---- Saves file to modfs.
+--- Saves file to ModFS.
 local function save(f, destFilename)
     if not f.data then
         log_error("save: Cannot save an empty file")
@@ -597,11 +597,6 @@ local function save(f, destFilename)
 
     if not file:write_bytes(f.data) then
         log_error(string.format("save: Unable to write to file: %s", destFilename))
-        return false
-    end
-
-    if not modFs:save() then
-        log_error(string.format("save: Unable to save ModFS: %s", modFs.modPath))
         return false
     end
 
