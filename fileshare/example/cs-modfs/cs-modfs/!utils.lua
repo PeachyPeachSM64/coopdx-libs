@@ -1,4 +1,4 @@
-local json = require("json")
+local json = require("lib/json")
 
 function log_message(msg)
     local s = string.format("[%06d] %s", get_global_timer(), msg)

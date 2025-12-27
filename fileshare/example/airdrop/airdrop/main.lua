@@ -2,7 +2,7 @@
 
 mod_fs_clear(mod_fs_get() or mod_fs_create())
 
-local fileshare = require("fileshare")
+local fileshare = require("lib/fileshare")
 
 local showTimer = 0
 local showTexture = nil

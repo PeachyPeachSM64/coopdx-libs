@@ -1,4 +1,4 @@
-local fileshare = require("fileshare")
+local fileshare = require("lib/fileshare")
 
 local PACKET_MAGIC = 0x11223344
 
