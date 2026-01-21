@@ -3,24 +3,18 @@
     Object to object interactions
 
     filename: !o2oint.lua
-    version: v1.0
+    version: v1.1
     author: PeachyPeach
-    required: sm64coopdx v1.0.0 or later
+    required: sm64coopdx v1.4.0 or later
 
     A small library to handle object to object interactions with ease.
 
 --]]
 
--- If this file exists in the main directory, but already loaded with require, skip it.
-if _G.libLoaded_o2oint then
-    return
-end
-
 local type = type
 local pairs = pairs
 local ipairs = ipairs
 local unpack = table.unpack
-local strfind = string.find
 local obj_get_first = obj_get_first
 local obj_get_next = obj_get_next
 local get_id_from_behavior = get_id_from_behavior
@@ -203,20 +197,5 @@ local o2oint = setmetatable({}, {
     __newindex = function () end,
     __metatable = false
 })
-
--- For compatibility with sm64coopdx versions below v1.4.0, which don't have the require keyword,
--- this file can be used in the main directory.
--- In that case, even for newer versions, 'require' must be overridden to return this lib
--- (and not load it accidentally twice).
-local _require = _G.require
-_G.require = function (modname)
-    if strfind(modname, "!o2oint") then
-        return o2oint
-    end
-    if _require then
-        return _require(modname)
-    end
-end
-_G.libLoaded_o2oint = true
 
 return o2oint

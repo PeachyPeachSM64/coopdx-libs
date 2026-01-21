@@ -11,11 +11,10 @@ Super Mario 64 handles them really poorly outside of Mario's interactions, which
 ## Installation
 
 1. Download the [libraries](https://github.com/PeachyPeachSM64/coopdx-libs/archive/refs/heads/master.zip).
-2. - **sm64coopdx version ≥ v1.4.0**: Copy the `lib` directory from `o2oint` into your mod's directory.
-   - **sm64coopdx version < v1.4.0**: Copy the `!o2oint.lua` **file** from `o2oint/lib/o2oint` into your mod's directory.
+2. Copy the `lib` directory from `o2oint` into your mod's directory.
 3. Import the library at the top of your script:
 ```lua
-local o2oint = require("!o2oint")
+local o2oint = require("lib/o2oint")
 ```
 
 <br>
@@ -205,7 +204,7 @@ Here is a simple example:<br>
 
 1. First, define the `Interactions` object:
 ```lua
-local o2oint = require("!o2oint")
+local o2oint = require("lib/o2oint")
 
 local coinMagnetInteractions = o2oint.Interactions({
     objectLists = {
