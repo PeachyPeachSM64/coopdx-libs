@@ -2,10 +2,10 @@
 
     Object to object interactions
 
-    filename: !o2oint.lua
+    filename: o2oint.lua
     version: v1.1
     author: PeachyPeach
-    required: sm64coopdx v1.4.0 or later
+    required: sm64coopdx v1.4 or later
 
     A small library to handle object to object interactions with ease.
 

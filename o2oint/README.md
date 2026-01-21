@@ -1,7 +1,7 @@
 # Object to object interactions
 
 `o2oint` is a small library to handle object to object interactions with ease.<br>
-**sm64coopdx v1.0.0 or later is required.**
+**sm64coopdx v1.4 or later is required.**
 
 The goal is to simplify the definition of interactions between objects.<br>
 Super Mario 64 handles them really poorly outside of Mario's interactions, which makes coding interactions for custom objects (a custom projectile for example) very tedious and unnecessarily complex. This library aims to fix that issue.

@@ -1,7 +1,7 @@
 # File Share
 
 `fileshare` is a small library to send and receive ModFS files over the network.<br>
-**sm64coopdx v1.4.0 or later is required.**
+**sm64coopdx v1.4 or later is required.**
 
 > [!IMPORTANT]
 > This library is using the hook `HOOK_ON_PACKET_BYTESTRING_RECEIVE`!<br>
