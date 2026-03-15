@@ -2,7 +2,7 @@
 
 mod_fs_clear(mod_fs_get() or mod_fs_create())
 
-local fileshare = require("lib/fileshare")
+local fish = require("lib/fish")
 
 local showTimer = 0
 local showTexture = nil
@@ -45,7 +45,7 @@ hook_chat_command("send", "<modPath>/<filename>", function (msg)
     if sep then
         local modPath = string.sub(msg, 1, sep - 1)
         local filename = string.sub(msg, sep + 1)
-        if fileshare.send(0, modPath, filename) then
+        if fish.send(0, modPath, filename) then
             djui_chat_message_create("Sending file: " .. msg)
         end
     end
@@ -53,7 +53,7 @@ hook_chat_command("send", "<modPath>/<filename>", function (msg)
 end)
 
 hook_event(HOOK_UPDATE, function ()
-    local receivedFiles, pendingFiles = fileshare.receive()
+    local pendingFiles, receivedFiles = fish.receive()
     for _, pendingFile in ipairs(pendingFiles) do
         djui_chat_message_create(string.format("Receiving file %s/%s: %d%%...",
             pendingFile.modPath,
@@ -66,7 +66,7 @@ hook_event(HOOK_UPDATE, function ()
             receivedFile.modPath,
             receivedFile.filename
         ))
-        fileshare.save(receivedFile)
+        fish.save(receivedFile)
         mod_fs_get():save()
     end
 end)

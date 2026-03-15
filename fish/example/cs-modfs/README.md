@@ -17,7 +17,7 @@ Allows you to load your own characters in Character Select and send them to othe
 
 ## Template
 
-This repository includes a [template](https://github.com/PeachyPeachSM64/coopdx-libs/tree/master/fileshare/example/cs-modfs/template) for creating ModFS compatible characters that can be used with this mod.
+This repository includes a [template](https://github.com/PeachyPeachSM64/coopdx-libs/tree/master/fish/example/cs-modfs/template) for creating ModFS compatible characters that can be used with this mod.
 
 ## Credits
 

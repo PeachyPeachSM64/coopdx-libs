@@ -1,4 +1,4 @@
-local fileshare = require("lib/fileshare")
+local fish = require("lib/fish")
 
 local PACKET_MAGIC = 0x11223344
 
@@ -342,7 +342,7 @@ local function on_packet_host_request_file_data(p)
     if character ~= nil then
         local filename = p:unpack(PACKET_FMT_STRING)
         local modPath = character.modPath
-        if fileshare.send(network_local_index_from_global(0), modPath, filename) then
+        if fish.send(network_local_index_from_global(0), modPath, filename) then
             log_message(string.format("--> Sending data of file \"%s\" to host for character: %s", filename, charName))
         end
     end
@@ -504,7 +504,7 @@ local function on_packet_guest_request_file_data(p)
         else
             filepath = filename
         end
-        if fileshare.send(network_local_index_from_global(globalIndex), modPath, filepath) then
+        if fish.send(network_local_index_from_global(globalIndex), modPath, filepath) then
             log_message(string.format("--> Sending data of file \"%s\" to globalIndex (%d) for character: %s", filename, globalIndex, charName))
         end
     end
@@ -549,7 +549,7 @@ hook_event(HOOK_ON_PACKET_BYTESTRING_RECEIVE, on_packet_bytestring_receive)
 local function main_update()
     local isHost = network_is_server()
 
-    local receivedFiles, pendingFiles = fileshare.receive()
+    local pendingFiles, receivedFiles = fish.receive()
     update_character_files(receivedFiles, pendingFiles, isHost)
 
     -- If all characters files are received, load characters into CS
