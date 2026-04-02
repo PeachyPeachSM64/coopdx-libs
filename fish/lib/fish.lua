@@ -857,7 +857,7 @@ local function send(toLocalIndex, modPath, filename, annotation)
         { name = "toLocalIndex", value = toLocalIndex, type = "integer" },
         { name = "modPath", value = modPath, type = "string" },
         { name = "filename", value = filename, type = "string" },
-        { name = "annotation", value = annotation, type = "annotation", optional = true },
+        { name = "annotation", value = annotation, type = "string", optional = true },
     }) then return false end
 
     if toLocalIndex ~= 0 then
