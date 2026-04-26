@@ -277,6 +277,171 @@ Mario will now attract all coins in a 1000 units radius around him.
 ## Example 2
 
 A more complex example:<br>
-`projectile`
+`Throw a fireball in front of Mario when pressing the X button, that attacks enemies and collect coins.`
 
+<br>
 
+1. Let's define the `Interactions` object:
+```lua
+local o2oint = require("lib/o2oint")
+
+local function bhv_fireball_despawn(o)
+    spawn_mist_particles_with_sound(SOUND_OBJ_DEFAULT_DEATH)
+    obj_mark_for_deletion(o)
+end
+
+local sFireballInteractions = o2oint.Interactions({
+    objectLists = {
+        OBJ_LIST_LEVEL, -- Coins
+        OBJ_LIST_GENACTOR, -- Common enemies
+        OBJ_LIST_PUSHABLE, -- Goombas, Koopas, Lakitus
+        OBJ_LIST_DESTRUCTIVE, -- Bob-ombs, breakable boxes
+        OBJ_LIST_SURFACE, -- Boxes
+    },
+    interactions = {
+
+        -- Behavior for coins: collect the coin.
+        {
+            targets = {
+                obj_is_coin,
+            },
+            interact = function (interactor, interactee, context)
+                interact_coin(context.m, INTERACT_COIN, interactee)
+            end,
+            ignoreIntangible = false
+        },
+
+        -- Default behavior for most of the enemies: attack the enemy.
+        {
+            targets = {
+                id_bhvBobomb,
+                obj_is_attackable,
+                obj_is_exclamation_box,
+            },
+            interact = function (interactor, interactee, context)
+                interactee.oInteractStatus = interactee.oInteractStatus | ATTACK_PUNCH | INT_STATUS_WAS_ATTACKED | INT_STATUS_INTERACTED | INT_STATUS_TOUCHED_BOB_OMB
+                bhv_fireball_despawn(interactor) -- Despawn the fireball on hit.
+            end,
+            ignoreIntangible = false
+        },
+
+        -- Behavior for breakable boxes: break the box.
+        {
+            targets = {
+                obj_is_breakable_object,
+            },
+            interact = function (interactor, interactee, context)
+                interactee.oInteractStatus = interactee.oInteractStatus | ATTACK_KICK_OR_TRIP | INT_STATUS_INTERACTED | INT_STATUS_WAS_ATTACKED | INT_STATUS_STOP_RIDING -- "broken" status, specific to breakable boxes.
+                bhv_fireball_despawn(interactor) -- Despawn the fireball on hit.
+            end,
+            ignoreIntangible = false
+        },
+
+        -- Behavior for bullies: repel the bully.
+        {
+            targets = {
+                obj_is_bully,
+            },
+            interact = function (interactor, interactee, context)
+                interactee.oMoveAngleYaw = obj_angle_to_object(interactor, interactee)
+                interactee.oForwardVel = 3392.0 / interactee.hitboxRadius
+                interactee.oInteractStatus = interactee.oInteractStatus | ATTACK_PUNCH | INT_STATUS_WAS_ATTACKED | INT_STATUS_INTERACTED
+                bhv_fireball_despawn(interactor) -- Despawn the fireball on hit.
+            end,
+            ignoreIntangible = false
+        }
+    }
+})
+```
+
+<br>
+
+2. Then, define the fireball behavior:
+```lua
+
+-- Initialization function for the fireball behavior.
+-- Set hitbox and tangibility for interactions,
+-- move yaw, forward vel and friction for movement,
+-- offset, scale and billboard for graphics.
+local function bhv_fireball_init(o)
+    o.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE | OBJ_FLAG_MOVE_XZ_USING_FVEL
+    o.hitboxRadius = 50
+    o.hitboxHeight = 80
+    o.oWallHitboxRadius = 30
+    o.oIntangibleTimer = 0
+    o.oMoveAngleYaw = o.oFaceAngleYaw
+    o.oForwardVel = 30
+    o.oFriction = 1.0
+    o.oGraphYOffset = 40
+    obj_scale(o, 4)
+    obj_set_billboard(o)
+end
+
+-- Update function for the fireball behavior.
+local function bhv_fireball_update(o)
+
+    -- Despawn the fireball after some time.
+    if o.oTimer > 150 then
+        bhv_fireball_despawn(o)
+        return
+    end
+
+    -- Move the fireball.
+    local stepResult = object_step()
+
+    -- Despawn the fireball if it hits a wall.
+    if stepResult & OBJ_COL_FLAG_HIT_WALL ~= 0 then
+        bhv_fireball_despawn(o)
+        return
+    end
+
+    -- Despawn the fireball if it touches water.
+    if stepResult & OBJ_COL_FLAG_UNDERWATER ~= 0 then
+        bhv_fireball_despawn(o)
+        play_sound(SOUND_GENERAL_FLAME_OUT, o.header.gfx.cameraToObject)
+        return
+    end
+
+    -- Process interactions.
+    -- Pass the MarioState of the owner of the fireball as context for the coin interaction.
+    local m = gMarioStates[network_local_index_from_global(o.globalPlayerIndex)]
+    sFireballInteractions:process_interactions(o, { m = m })
+
+    -- Animate the fireball.
+    if o.oTimer % 2 == 0 then
+        o.oAnimState = o.oAnimState + 1
+
+        -- Spawn a trail of smaller flames for a sweet graphical effect.
+        spawn_non_sync_object(id_bhvSparkle, E_MODEL_RED_FLAME, o.oPosX, o.oPosY + 40, o.oPosZ, function (obj)
+            obj_scale(obj, 2)
+            obj_set_billboard(obj)
+            obj.oAnimState = math.random(0, 3)
+        end)
+    end
+end
+
+-- Hook the fireball behavior.
+id_bhvFireball = hook_behavior(nil, OBJ_LIST_GENACTOR, true, bhv_fireball_init, bhv_fireball_update, "bhvFireball")
+```
+
+<br>
+
+3. Finally, add a Mario update hook to spawn a fireball when X is pressed:
+```lua
+hook_event(HOOK_MARIO_UPDATE, function (m)
+    if m.controller.buttonPressed & X_BUTTON ~= 0 then
+        spawn_non_sync_object(id_bhvFireball, E_MODEL_RED_FLAME, m.pos.x, m.pos.y + 60, m.pos.z, function (o)
+            o.oFaceAngleYaw = m.faceAngle.y
+            o.globalPlayerIndex = network_global_index_from_local(0)
+        end)
+        play_sound(SOUND_OBJ_FLAME_BLOWN, m.marioObj.header.gfx.cameraToObject)
+    end
+end)
+```
+
+<br>
+
+And that's it!<br>
+Press X to throw a fireball that attacks enemies and collect coins.
+
+<br>
