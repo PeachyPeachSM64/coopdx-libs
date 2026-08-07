@@ -26,10 +26,6 @@ local PACKET_TYPE_FILE_HEADER   = 1
 local PACKET_TYPE_FILE_PART     = 2
 local PACKET_TYPE_ACK           = 3
 
-local MAX_PACKET_SIZE           = (PACKET_LENGTH - 25)
-local MAX_FILE_PART_SIZE        = (MAX_PACKET_SIZE - 32)
-local MAX_ACKS_PER_PACKET       = math.floor((MAX_PACKET_SIZE - 32) / 8)
-
 ------------
 -- config --
 ------------
@@ -37,6 +33,7 @@ local MAX_ACKS_PER_PACKET       = math.floor((MAX_PACKET_SIZE - 32) / 8)
 --- @alias 🐟ConfigName
 --- | "MAX_FILE_SIZE"
 --- | "MAX_FILES_PER_PLAYER"
+--- | "MAX_PACKET_SIZE"
 --- | "MAX_PACKETS_PER_PLAYER"
 --- | "MAX_PACKETS_PER_FRAME"
 --- | "TIMEOUT_FRAMES"
@@ -46,6 +43,7 @@ local MAX_ACKS_PER_PACKET       = math.floor((MAX_PACKET_SIZE - 32) / 8)
 --- @class 🐟Config
 --- @field MAX_FILE_SIZE integer
 --- @field MAX_FILES_PER_PLAYER integer
+--- @field MAX_PACKET_SIZE integer
 --- @field MAX_PACKETS_PER_PLAYER integer
 --- @field MAX_PACKETS_PER_FRAME integer 
 --- @field TIMEOUT_FRAMES integer
@@ -56,6 +54,7 @@ local MAX_ACKS_PER_PACKET       = math.floor((MAX_PACKET_SIZE - 32) / 8)
 local DEFAULT_CONFIG       = {
     MAX_FILE_SIZE          = 0x100000, -- 1MB
     MAX_FILES_PER_PLAYER   = 10,
+    MAX_PACKET_SIZE        = math.floor(PACKET_LENGTH / 4) - 25,
     MAX_PACKETS_PER_PLAYER = 500,
     MAX_PACKETS_PER_FRAME  = 50,
     TIMEOUT_FRAMES         = 60, -- 2 seconds
@@ -67,12 +66,25 @@ local DEFAULT_CONFIG       = {
 local sConfig              = {
     MAX_FILE_SIZE          = DEFAULT_CONFIG.MAX_FILE_SIZE,
     MAX_FILES_PER_PLAYER   = DEFAULT_CONFIG.MAX_FILES_PER_PLAYER,
+    MAX_PACKET_SIZE        = DEFAULT_CONFIG.MAX_PACKET_SIZE,
     MAX_PACKETS_PER_PLAYER = DEFAULT_CONFIG.MAX_PACKETS_PER_PLAYER,
     MAX_PACKETS_PER_FRAME  = DEFAULT_CONFIG.MAX_PACKETS_PER_FRAME,
     TIMEOUT_FRAMES         = DEFAULT_CONFIG.TIMEOUT_FRAMES,
     MAX_RETRIES            = DEFAULT_CONFIG.MAX_RETRIES,
     DEBUG                  = DEFAULT_CONFIG.DEBUG,
 }
+
+local sMaxFilePartSize  = (sConfig.MAX_PACKET_SIZE - 32)
+local sMaxAcksPerPacket = math.floor((sConfig.MAX_PACKET_SIZE - 32) / 8)
+
+--- @param name 🐟ConfigName
+local function on_config_set(name)
+    if name == "MAX_PACKET_SIZE" then
+        sConfig.MAX_PACKET_SIZE = sConfig.MAX_PACKET_SIZE - 25
+        sMaxFilePartSize  = (sConfig.MAX_PACKET_SIZE - 32)
+        sMaxAcksPerPacket = math.floor((sConfig.MAX_PACKET_SIZE - 32) / 8)
+    end
+end
 
 --- @param name 🐟ConfigName
 --- @return boolean|integer
@@ -86,8 +98,10 @@ local function config_set(name, value)
     if sConfig[name] ~= nil then
         if value ~= nil then
             sConfig[name] = value
+            on_config_set(name)
         else
             sConfig[name] = DEFAULT_CONFIG[name]
+            on_config_set(name)
         end
     end
 end
@@ -343,6 +357,7 @@ end
 --- @field annotation string
 --- @field fileSize integer
 --- @field numParts integer
+--- @field receivedParts integer
 --- @field fileParts table<string>
 
 --- @type table<integer, 🐟FileObject>
@@ -387,10 +402,7 @@ end
 --- @param file 🐟FileObject
 --- @return 🐟File
 local function get_completed_file(file)
-    local data = ""
-    for _, filePart in ipairs(file.fileParts) do
-        data = data .. filePart
-    end
+    local data = table.concat(file.fileParts)
 
     return {
         sender = file.sender,
@@ -470,7 +482,7 @@ local function send_acks()
         if gNetworkPlayers[playerIndex].connected and packetUids and #packetUids > 0 then
             local indexStart = 1
             while true do
-                local indexEnd = math.min(indexStart + MAX_ACKS_PER_PACKET - 1, #packetUids)
+                local indexEnd = math.min(indexStart + sMaxAcksPerPacket - 1, #packetUids)
                 local numPackets = indexEnd - indexStart + 1
                 local uid = get_new_packet_uid()
 
@@ -742,13 +754,13 @@ local function send_file_header(toLocalIndex, modPath, filename, annotation)
     end
 
     -- adjust annotation size
-    local maxAnnotationSize = MAX_PACKET_SIZE - #modPath - #filename - 64
+    local maxAnnotationSize = sConfig.MAX_PACKET_SIZE - #modPath - #filename - 64
     if annotation and #annotation > maxAnnotationSize then
         log_warning("send_file_header: Annotation too big (%d > %d): it will be truncated", #annotation, maxAnnotationSize)
-        annotation = string.sub(annotation, 1, maxAnnotationSize - 1)
+        annotation = annotation:sub(1, maxAnnotationSize - 1)
     end
 
-    local numParts = math.ceil(file.size / MAX_FILE_PART_SIZE)
+    local numParts = math.ceil(file.size / sMaxFilePartSize)
     local uid = get_new_packet_uid()
     local fileUid = get_new_file_uid()
 
@@ -817,7 +829,7 @@ local function send_file_parts(toLocalIndex, fileUid, modPath, filename, fileSiz
     end
 
     -- check matching num parts
-    local fileNumParts = math.ceil(fileSize / MAX_FILE_PART_SIZE)
+    local fileNumParts = math.ceil(fileSize / sMaxFilePartSize)
     if fileNumParts ~= numParts then
         log_error("send_file_parts: Mismatching number of file parts: %d (should be %d)", fileNumParts, numParts)
         return false
@@ -825,8 +837,8 @@ local function send_file_parts(toLocalIndex, fileUid, modPath, filename, fileSiz
 
     for i = 1, numParts do
         local uid = get_new_packet_uid()
-        local partStart = MAX_FILE_PART_SIZE * (i - 1)
-        local partLength = math.min(MAX_FILE_PART_SIZE, fileSize - partStart)
+        local partStart = sMaxFilePartSize * (i - 1)
+        local partLength = math.min(sMaxFilePartSize, fileSize - partStart)
         file:seek(partStart, FILE_SEEK_SET)
 
         local data = packet_to_bytestring({
@@ -886,7 +898,7 @@ local function receive()
     local fileUidsToRemove = {}
 
     for fileUid, file in pairs(sFileObjects) do
-        if #file.fileParts == file.numParts then
+        if file.receivedParts == file.numParts then
             completedFiles[#completedFiles+1] = get_completed_file(file)
             fileUidsToRemove[#fileUidsToRemove+1] = fileUid
         else
@@ -944,6 +956,7 @@ local function on_packet_file_header(packet)
         annotation = packet.annotation,
         fileSize = packet.fileSize,
         numParts = packet.numParts,
+        receivedParts = 0,
         fileParts = {}
     }
 
@@ -1004,10 +1017,11 @@ local function on_packet_file_part(packet)
         log_warning("on_packet_file_part: File part %d has already been received for file uid: %d", packet.index, packet.fileUid)
         queue_ack(playerIndex, packet.uid) -- send ack again in case sender didn't receive it
         return
+    else
+        -- fill file part
+        file.fileParts[packet.index] = packet.data
+        file.receivedParts = file.receivedParts + 1
     end
-
-    -- fill file part
-    file.fileParts[packet.index] = packet.data
 
     -- send ack
     queue_ack(playerIndex, packet.uid)
