@@ -1,4 +1,4 @@
-local fish = require("lib/fish")
+local fish = require("/lib/fish")
 
 local PACKET_MAGIC = 0x11223344
 

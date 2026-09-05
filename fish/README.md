@@ -33,7 +33,7 @@ your-mod/
 ```
 3. Import the library at the top of your script:
 ```lua
-local fish = require("lib/fish")
+local fish = require("/lib/fish")
 ```
 
 ---

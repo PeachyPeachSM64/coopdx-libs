@@ -14,7 +14,7 @@ Super Mario 64 handles them really poorly outside of Mario's interactions, which
 2. Copy the `lib` directory from `o2oint` into your mod's directory.
 3. Import the library at the top of your script:
 ```lua
-local o2oint = require("lib/o2oint")
+local o2oint = require("/lib/o2oint")
 ```
 
 <br>
@@ -204,7 +204,7 @@ Here is a simple example:<br>
 
 1. First, define the `Interactions` object:
 ```lua
-local o2oint = require("lib/o2oint")
+local o2oint = require("/lib/o2oint")
 
 local coinMagnetInteractions = o2oint.Interactions({
     objectLists = {
@@ -283,7 +283,7 @@ A more complex example:<br>
 
 1. Let's define the `Interactions` object:
 ```lua
-local o2oint = require("lib/o2oint")
+local o2oint = require("/lib/o2oint")
 
 local function bhv_fireball_despawn(o)
     spawn_mist_particles_with_sound(SOUND_OBJ_DEFAULT_DEATH)

@@ -2,7 +2,7 @@
 
 mod_fs_clear(mod_fs_get() or mod_fs_create())
 
-local fish = require("lib/fish")
+local fish = require("/lib/fish")
 
 local showTimer = 0
 local showTexture = nil
